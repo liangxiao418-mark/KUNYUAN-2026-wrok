@@ -539,35 +539,24 @@ export default function ExportPanel({
       // 生成图表图片
       const chartImageBase64 = await generateChartImage();
 
-      // 将Base64转换为Blob
-      const base64Data = chartImageBase64.split(',')[1];
-      const byteCharacters = atob(base64Data);
-      const byteArrays = [];
-      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-        const slice = byteCharacters.slice(offset, offset + 512);
-        const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
-          byteNumbers[i] = slice.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        byteArrays.push(byteArray);
-      }
-      const blob = new Blob(byteArrays, {
-        type: 'image/png'
-      });
-      const url = URL.createObjectURL(blob);
+      // 生成HTML内容
+      const htmlContent = generateReportHTML(chartImageBase64);
 
-      // 创建下载链接
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `坤远展览票房精准测算报告_${startDate}_${endDate}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      // 创建打印窗口
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (!printWindow) {
+        toast({
+          title: '导出失败',
+          description: '请允许弹出窗口以导出图片',
+          variant: 'destructive'
+        });
+        return;
+      }
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
       toast({
-        title: '图片导出成功',
-        description: '报告图表已成功导出为PNG图片'
+        title: '图片导出准备就绪',
+        description: '请在打开的窗口中使用截图工具或浏览器打印功能保存为图片'
       });
     } catch (error) {
       toast({
