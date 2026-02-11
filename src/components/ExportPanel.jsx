@@ -1,7 +1,7 @@
 // @ts-ignore;
 import React, { useRef } from 'react';
 // @ts-ignore;
-import { FileSpreadsheet, FileText, Download, Image } from 'lucide-react';
+import { FileSpreadsheet, Download, Image } from 'lucide-react';
 // @ts-ignore;
 import { useToast } from '@/components/ui';
 
@@ -589,15 +589,16 @@ export default function ExportPanel({
     `;
   };
 
-  // 生成图表图片
-  const generateChartImage = () => {
+  // 生成完整报告图片
+  const generateReportImage = () => {
     return new Promise((resolve, reject) => {
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = 600;
-        canvas.height = 300;
-        drawCharts(canvas, dailyData, kpiData);
-        const dataUrl = canvas.toDataURL('image/png');
+        // 设置较大的尺寸以保证清晰度
+        canvas.width = 1400;
+        canvas.height = 1200;
+        drawFullReport(canvas);
+        const dataUrl = canvas.toDataURL('image/png', 1.0);
         resolve(dataUrl);
       } catch (error) {
         reject(error);
@@ -605,69 +606,41 @@ export default function ExportPanel({
     });
   };
 
-  // 导出 PDF
-  const exportPDF = async () => {
-    try {
-      // 生成图表图片
-      const chartImageBase64 = await generateChartImage();
-
-      // 生成HTML内容
-      const htmlContent = generateReportHTML(chartImageBase64);
-
-      // 创建打印窗口
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      if (!printWindow) {
-        toast({
-          title: '导出失败',
-          description: '请允许弹出窗口以导出PDF',
-          variant: 'destructive'
-        });
-        return;
-      }
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-
-      // 等待页面加载完成后触发打印
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
-      toast({
-        title: 'PDF 导出准备就绪',
-        description: '请在打印对话框中选择"另存为 PDF"以保存报告'
-      });
-    } catch (error) {
-      toast({
-        title: '导出失败',
-        description: error.message || '导出过程中发生错误',
-        variant: 'destructive'
-      });
-    }
-  };
-
   // 导出图片
   const exportImage = async () => {
     try {
-      // 生成图表图片
-      const chartImageBase64 = await generateChartImage();
+      // 生成完整报告图片
+      const reportImageBase64 = await generateReportImage();
 
-      // 生成HTML内容
-      const htmlContent = generateReportHTML(chartImageBase64);
-
-      // 创建打印窗口
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      if (!printWindow) {
-        toast({
-          title: '导出失败',
-          description: '请允许弹出窗口以导出图片',
-          variant: 'destructive'
-        });
-        return;
+      // 将Base64转换为Blob
+      const base64Data = reportImageBase64.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
       }
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
+      const blob = new Blob(byteArrays, {
+        type: 'image/png'
+      });
+      const url = URL.createObjectURL(blob);
+
+      // 创建下载链接
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `坤远展览票房精准测算报告_${startDate}_${endDate}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       toast({
-        title: '图片导出准备就绪',
-        description: '请在打开的窗口中使用截图工具或浏览器打印功能保存为图片'
+        title: '图片导出成功',
+        description: '报告已成功导出为高清PNG图片'
       });
     } catch (error) {
       toast({
@@ -679,7 +652,7 @@ export default function ExportPanel({
   };
   return <div className="mt-6 bg-white rounded-xl shadow-lg p-6">
       <h3 className="text-lg font-bold text-slate-800 mb-4">导出报告</h3>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {/* Excel 导出 */}
         <button onClick={exportExcel} className="flex items-center justify-center space-x-3 px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg">
           <FileSpreadsheet className="w-6 h-6" />
@@ -690,22 +663,12 @@ export default function ExportPanel({
           <Download className="w-5 h-5 ml-auto" />
         </button>
         
-        {/* PDF 导出 */}
-        <button onClick={exportPDF} className="flex items-center justify-center space-x-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg">
-          <FileText className="w-6 h-6" />
-          <div className="text-left">
-            <p className="font-bold">导出 PDF</p>
-            <p className="text-xs opacity-80">核心指标和统计</p>
-          </div>
-          <Download className="w-5 h-5 ml-auto" />
-        </button>
-        
         {/* 图片导出 */}
         <button onClick={exportImage} className="flex items-center justify-center space-x-3 px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg">
           <Image className="w-6 h-6" />
           <div className="text-left">
             <p className="font-bold">导出图片</p>
-            <p className="text-xs opacity-80">与PDF内容一致</p>
+            <p className="text-xs opacity-80">完整报告高清图片</p>
           </div>
           <Download className="w-5 h-5 ml-auto" />
         </button>
@@ -714,7 +677,7 @@ export default function ExportPanel({
       <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
         <p className="text-sm text-amber-800">
           <strong>提示：</strong>
-          PDF导出将打开打印对话框，请选择"另存为 PDF"以保存报告；图片导出将直接下载PNG格式的图表文件。两者都包含核心指标、逻辑自检、图表分析、分类统计等内容（不含每日明细表）。
+          图片导出将直接下载高清PNG文件，包含完整的报告内容：左侧参数栏、右侧KPI数据、图表分析、分类统计等（不含每日明细表）。图片尺寸为1400x1200像素，清晰度高，适合打印和分享。
         </p>
       </div>
     </div>;
