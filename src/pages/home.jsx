@@ -390,7 +390,7 @@ export default function Home(props) {
           <Charts dailyData={dailyData} kpiData={kpiData} />
           
           {/* 导出面板 */}
-          <ExportPanel dailyData={dailyData} kpiData={kpiData} startDate={startDate} endDate={endDate} checkResult={checkResult} />
+          <ExportPanel dailyData={dailyData} kpiData={kpiData} startDate={startDate} endDate={endDate} checkResult={checkResult} holidayVisitors={holidayVisitors} vacationVisitors={vacationVisitors} normalVisitors={normalVisitors} avgTicketPrice={avgTicketPrice} winterVacationStart={winterVacationStart} winterVacationEnd={winterVacationEnd} summerVacationStart={summerVacationStart} summerVacationEnd={summerVacationEnd} earlyBirdEnabled={earlyBirdEnabled} earlyBirdPrice={earlyBirdPrice} earlyBirdStartDate={earlyBirdStartDate} earlyBirdEndDate={earlyBirdEndDate} earlyBirdDailySales={earlyBirdDailySales} />
           
           {/* 明细表格 */}
           <DataTable dailyData={dailyData} />

@@ -125,7 +125,21 @@ export default function ExportPanel({
   kpiData,
   startDate,
   endDate,
-  checkResult
+  checkResult,
+  // 参数配置数据
+  holidayVisitors,
+  vacationVisitors,
+  normalVisitors,
+  avgTicketPrice,
+  winterVacationStart,
+  winterVacationEnd,
+  summerVacationStart,
+  summerVacationEnd,
+  earlyBirdEnabled,
+  earlyBirdPrice,
+  earlyBirdStartDate,
+  earlyBirdEndDate,
+  earlyBirdDailySales
 }) {
   const {
     toast
@@ -235,79 +249,123 @@ export default function ExportPanel({
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
             font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
-            padding: 40px;
             color: #333;
             line-height: 1.6;
             background: #fff;
           }
+          .container {
+            display: flex;
+            min-height: 100vh;
+          }
+          .sidebar {
+            width: 320px;
+            background: #fff;
+            padding: 24px;
+            border-right: 1px solid #e2e8f0;
+            flex-shrink: 0;
+          }
+          .main-content {
+            flex: 1;
+            padding: 24px;
+            background: #f8fafc;
+          }
           .header { 
             text-align: center; 
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             border-bottom: 3px solid #1E40AF;
-            padding-bottom: 20px;
+            padding-bottom: 16px;
           }
           .header h1 { 
-            font-size: 28px;
+            font-size: 24px;
             color: #1E40AF;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
           }
           .header p { 
-            font-size: 14px;
+            font-size: 12px;
             color: #666;
           }
-          .section { 
-            margin-bottom: 30px;
+          .sidebar-section {
+            margin-bottom: 20px;
           }
-          .section-title { 
-            font-size: 18px;
-            color: #1E40AF;
-            border-left: 4px solid #1E40AF;
-            padding-left: 10px;
-            margin-bottom: 15px;
-            font-weight: bold;
+          .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+          }
+          .sidebar-title-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+          }
+          .sidebar-item {
+            margin-bottom: 8px;
+          }
+          .sidebar-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: #64748B;
+            margin-bottom: 4px;
+          }
+          .sidebar-value {
+            font-size: 12px;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff;
+            width: 100%;
           }
           .kpi-grid { 
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 16px;
+            margin-bottom: 24px;
           }
           .kpi-card { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
             color: white;
             padding: 20px;
-            border-radius: 8px;
-            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           }
-          .kpi-card.blue { background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%); }
           .kpi-card.green { background: linear-gradient(135deg, #059669 0%, #10B981 100%); }
           .kpi-card.amber { background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); }
           .kpi-card.purple { background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%); }
-          .kpi-label { font-size: 12px; opacity: 0.9; margin-bottom: 5px; }
+          .kpi-label { font-size: 12px; opacity: 0.9; margin-bottom: 4px; }
           .kpi-value { font-size: 24px; font-weight: bold; }
-          table { 
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+          .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
           }
-          th, td { 
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-            font-size: 12px;
+          .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           }
-          th { 
-            background-color: #1E40AF;
-            color: white;
+          .chart-title {
+            font-size: 16px;
             font-weight: bold;
+            color: #1E293B;
+            margin-bottom: 16px;
           }
-          tr:nth-child(even) { background-color: #f9f9f9; }
-          .summary-table { margin-bottom: 20px; }
-          .check-box {
-            padding: 15px;
+          .chart-image {
+            width: 100%;
+            height: auto;
             border-radius: 8px;
-            margin-bottom: 20px;
+          }
+          .check-box {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
             border: 2px solid;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
           .check-box.success {
             background-color: #ECFDF5;
@@ -329,149 +387,202 @@ export default function ExportPanel({
           }
           .check-box.success .check-desc { color: #047857; }
           .check-box.error .check-desc { color: #B91C1C; }
-          .charts-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-          }
-          .chart-wrapper {
-            flex: 1;
-            text-align: center;
-          }
-          .chart-image {
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-          }
           .footer { 
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #ddd;
+            border-top: 1px solid #e2e8f0;
             text-align: center;
             font-size: 12px;
-            color: #666;
+            color: #64748B;
           }
           @media print {
-            body { padding: 20px; }
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; }
             .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-            .charts-container { flex-direction: column; }
+            .charts-grid { grid-template-columns: 1fr; }
           }
         </style>
       </head>
       <body>
-        <div class="header">
-          <h1>坤远展览票房精准测算报告</h1>
-          <p>2026年版 | 展期：${startDate} 至 ${endDate}</p>
-        </div>
-        
-        <div class="section">
-          <div class="section-title">核心指标</div>
-          <div class="kpi-grid">
-            <div class="kpi-card blue">
-              <div class="kpi-label">总票房</div>
-              <div class="kpi-value">¥${formatNumber(kpiData.totalRevenue)}</div>
+        <div class="container">
+          <!-- 左侧参数栏 -->
+          <div class="sidebar">
+            <div class="header">
+              <h1>坤远展览票房精准测算报告</h1>
+              <p>2026年版 | 展期：${startDate} 至 ${endDate}</p>
             </div>
-            <div class="kpi-card green">
-              <div class="kpi-label">总人次</div>
-              <div class="kpi-value">${formatNumber(kpiData.totalVisitors)}</div>
+            
+            <div class="sidebar-section">
+              <div class="sidebar-title">
+                <span class="sidebar-title-icon">📅</span>
+                展期设置
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">开始日期</label>
+                <div class="sidebar-value">${startDate}</div>
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">结束日期</label>
+                <div class="sidebar-value">${endDate}</div>
+              </div>
             </div>
-            <div class="kpi-card amber">
-              <div class="kpi-label">运营天数</div>
-              <div class="kpi-value">${formatNumber(kpiData.operatingDays)}</div>
+            
+            <div class="sidebar-section">
+              <div class="sidebar-title">
+                <span class="sidebar-title-icon">👥</span>
+                客流模型（人次/天）
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">★ 节日客流</label>
+                <div class="sidebar-value">${formatNumber(holidayVisitors)}</div>
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">📚 寒暑假客流</label>
+                <div class="sidebar-value">${formatNumber(vacationVisitors)}</div>
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">📅 平日客流</label>
+                <div class="sidebar-value">${formatNumber(normalVisitors)}</div>
+              </div>
             </div>
-            <div class="kpi-card purple">
-              <div class="kpi-label">日均票房</div>
-              <div class="kpi-value">¥${kpiData.operatingDays > 0 ? formatNumber(kpiData.totalRevenue / kpiData.operatingDays) : 0}</div>
+            
+            <div class="sidebar-section">
+              <div class="sidebar-title">
+                <span class="sidebar-title-icon">💰</span>
+                票价设置
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">平均票价（元）</label>
+                <div class="sidebar-value">¥${avgTicketPrice}</div>
+              </div>
+            </div>
+            
+            ${earlyBirdEnabled ? `
+            <div class="sidebar-section">
+              <div class="sidebar-title">
+                <span class="sidebar-title-icon">⭐</span>
+                早鸟票设置
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">早鸟票单价（元）</label>
+                <div class="sidebar-value">¥${earlyBirdPrice}</div>
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">销售开始日期</label>
+                <div class="sidebar-value">${earlyBirdStartDate}</div>
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">销售结束日期</label>
+                <div class="sidebar-value">${earlyBirdEndDate}</div>
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">日均销售量（张/天）</label>
+                <div class="sidebar-value">${formatNumber(earlyBirdDailySales)}</div>
+              </div>
+            </div>
+            ` : ''}
+            
+            <div class="sidebar-section">
+              <div class="sidebar-title">
+                <span class="sidebar-title-icon">🎓</span>
+                寒暑假范围
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">寒假</label>
+                <div class="sidebar-value">${winterVacationStart} 至 ${winterVacationEnd}</div>
+              </div>
+              <div class="sidebar-item">
+                <label class="sidebar-label">暑假</label>
+                <div class="sidebar-value">${summerVacationStart} 至 ${summerVacationEnd}</div>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div class="section">
-          <div class="section-title">逻辑自检</div>
-          <div class="check-box ${checkResult.isMatch ? 'success' : 'error'}">
-            <div class="check-title">${checkResult.isMatch ? '✓ 计算正确' : '✗ 计算异常'}</div>
-            <div class="check-desc">
-              ${checkResult.isMatch ? `总天数 ${checkResult.calculatedTotal} = 节日(${checkResult.breakdown.holiday}) + 寒暑假(${checkResult.breakdown.vacation}) + 平日(${checkResult.breakdown.normal}) + 闭馆(${checkResult.breakdown.closed})` : `总天数 ${checkResult.calculatedTotal} ≠ 分类天数之和 ${checkResult.totalDays}`}
+          
+          <!-- 右侧内容区 -->
+          <div class="main-content">
+            <!-- KPI卡片 -->
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">总票房</div>
+                <div class="kpi-value">¥${formatNumber(kpiData.totalRevenue)}</div>
+                ${kpiData.earlyBirdRevenue > 0 ? `<div style="font-size: 10px; opacity: 0.8; margin-top: 4px;">含早鸟票 ¥${formatNumber(kpiData.earlyBirdRevenue)}</div>` : ''}
+              </div>
+              <div class="kpi-card green">
+                <div class="kpi-label">总人次</div>
+                <div class="kpi-value">${formatNumber(kpiData.totalVisitors)}</div>
+                ${kpiData.earlyBirdVisitors > 0 ? `<div style="font-size: 10px; opacity: 0.8; margin-top: 4px;">含早鸟票 ${formatNumber(kpiData.earlyBirdVisitors)}人</div>` : ''}
+              </div>
+              <div class="kpi-card amber">
+                <div class="kpi-label">运营天数</div>
+                <div class="kpi-value">${formatNumber(kpiData.operatingDays)}</div>
+              </div>
+              <div class="kpi-card purple">
+                <div class="kpi-label">日均票房</div>
+                <div class="kpi-value">¥${kpiData.operatingDays > 0 ? formatNumber(kpiData.totalRevenue / kpiData.operatingDays) : 0}</div>
+              </div>
+            </div>
+            
+            <!-- 逻辑自检 -->
+            <div class="check-box ${checkResult.isMatch ? 'success' : 'error'}">
+              <div class="check-title">${checkResult.isMatch ? '✓ 计算正确' : '✗ 计算异常'}</div>
+              <div class="check-desc">
+                ${checkResult.isMatch ? `总天数 ${checkResult.calculatedTotal} = 节日(${checkResult.breakdown.holiday}) + 寒暑假(${checkResult.breakdown.vacation}) + 平日(${checkResult.breakdown.normal}) + 闭馆(${checkResult.breakdown.closed})` : `总天数 ${checkResult.calculatedTotal} ≠ 分类天数之和 ${checkResult.totalDays}`}
+              </div>
+            </div>
+            
+            <!-- 图表 -->
+            <div class="charts-grid">
+              <div class="chart-card">
+                <div class="chart-title">每月票房趋势</div>
+                <img src="${chartImageBase64}" alt="每月票房趋势" class="chart-image" />
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">各时段票房贡献占比</div>
+                <img src="${chartImageBase64}" alt="各时段票房贡献占比" class="chart-image" />
+              </div>
+            </div>
+            
+            <!-- 分类统计 -->
+            <div class="chart-card">
+              <div class="chart-title">分类统计</div>
+              <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+                <thead>
+                  <tr style="background-color: #1E40AF; color: white;">
+                    <th style="padding: 10px; text-align: left; font-size: 12px;">类型</th>
+                    <th style="padding: 10px; text-align: left; font-size: 12px;">天数</th>
+                    <th style="padding: 10px; text-align: left; font-size: 12px;">占比</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">节日</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${formatNumber(kpiData.holidayDays)}</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${(kpiData.holidayDays / dailyData.length * 100).toFixed(1)}%</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">寒暑假</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${formatNumber(kpiData.vacationDays)}</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${(kpiData.vacationDays / dailyData.length * 100).toFixed(1)}%</td>
+                  </tr>
+                  <tr style="background-color: #f9f9f9;">
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">平日</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${formatNumber(kpiData.normalDays)}</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${(kpiData.normalDays / dailyData.length * 100).toFixed(1)}%</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">闭馆</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${formatNumber(kpiData.closedDays)}</td>
+                    <td style="padding: 10px; font-size: 12px; border: 1px solid #e2e8f0;">${(kpiData.closedDays / dailyData.length * 100).toFixed(1)}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="footer">
+              <p>报告生成时间：${new Date().toLocaleString('zh-CN')}</p>
+              <p>坤远展览票房精准测算沙盘 (2026年版)</p>
             </div>
           </div>
-        </div>
-        
-        <div class="section">
-          <div class="section-title">图表分析</div>
-          <div class="charts-container">
-            <div class="chart-wrapper">
-              <img src="${chartImageBase64}" alt="每月票房趋势" class="chart-image" />
-            </div>
-          </div>
-        </div>
-        
-        ${kpiData.earlyBirdRevenue > 0 ? `
-        <div class="section">
-          <div class="section-title">早鸟票统计</div>
-          <table class="summary-table">
-            <thead>
-              <tr>
-                <th>项目</th>
-                <th>数值</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>早鸟票票房</td>
-                <td>¥${formatNumber(kpiData.earlyBirdRevenue)}</td>
-              </tr>
-              <tr>
-                <td>早鸟票人次</td>
-                <td>${formatNumber(kpiData.earlyBirdVisitors)}</td>
-              </tr>
-              <tr>
-                <td>展览票房</td>
-                <td>¥${formatNumber(kpiData.totalRevenue - kpiData.earlyBirdRevenue)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        ` : ''}
-        
-        <div class="section">
-          <div class="section-title">分类统计</div>
-          <table class="summary-table">
-            <thead>
-              <tr>
-                <th>类型</th>
-                <th>天数</th>
-                <th>占比</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>节日</td>
-                <td>${formatNumber(kpiData.holidayDays)}</td>
-                <td>${(kpiData.holidayDays / dailyData.length * 100).toFixed(1)}%</td>
-              </tr>
-              <tr>
-                <td>寒暑假</td>
-                <td>${formatNumber(kpiData.vacationDays)}</td>
-                <td>${(kpiData.vacationDays / dailyData.length * 100).toFixed(1)}%</td>
-              </tr>
-              <tr>
-                <td>平日</td>
-                <td>${formatNumber(kpiData.normalDays)}</td>
-                <td>${(kpiData.normalDays / dailyData.length * 100).toFixed(1)}%</td>
-              </tr>
-              <tr>
-                <td>闭馆</td>
-                <td>${formatNumber(kpiData.closedDays)}</td>
-                <td>${(kpiData.closedDays / dailyData.length * 100).toFixed(1)}%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        
-        <div class="footer">
-          <p>报告生成时间：${new Date().toLocaleString('zh-CN')}</p>
-          <p>坤远展览票房精准测算沙盘 (2026年版)</p>
         </div>
       </body>
       </html>
