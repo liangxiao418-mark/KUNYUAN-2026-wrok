@@ -654,42 +654,42 @@ export default function ExportPanel({
       });
     }
   };
-  return <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-lg font-bold text-slate-800 mb-4">导出报告</h3>
-      <div className="grid grid-cols-3 gap-4">
+  return <div className="bg-white rounded-xl shadow-lg p-4">
+      <h3 className="text-base font-bold text-slate-800 mb-3">导出报告</h3>
+      <div className="grid grid-cols-3 gap-2">
         {/* Excel 导出 */}
-        <button onClick={exportExcel} className="flex items-center justify-center space-x-3 px-4 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg">
-          <FileSpreadsheet className="w-5 h-5" />
+        <button onClick={exportExcel} className="flex items-center justify-center space-x-2 px-3 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-lg transition-all transform hover:scale-105 shadow">
+          <FileSpreadsheet className="w-4 h-4" />
           <div className="text-left">
-            <p className="font-bold text-sm">导出 Excel</p>
-            <p className="text-xs opacity-80">汇总和明细</p>
+            <p className="font-bold text-xs">导出 Excel</p>
+            <p className="text-[10px] opacity-80">汇总和明细</p>
           </div>
-          <Download className="w-4 h-4 ml-auto" />
+          <Download className="w-3 h-3 ml-auto" />
         </button>
         
         {/* 图片导出 */}
-        <button onClick={exportImage} className="flex items-center justify-center space-x-3 px-4 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg">
-          <Image className="w-5 h-5" />
+        <button onClick={exportImage} className="flex items-center justify-center space-x-2 px-3 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white rounded-lg transition-all transform hover:scale-105 shadow">
+          <Image className="w-4 h-4" />
           <div className="text-left">
-            <p className="font-bold text-sm">导出图片</p>
-            <p className="text-xs opacity-80">概览不含明细</p>
+            <p className="font-bold text-xs">导出图片</p>
+            <p className="text-[10px] opacity-80">概览不含明细</p>
           </div>
-          <Download className="w-4 h-4 ml-auto" />
+          <Download className="w-3 h-3 ml-auto" />
         </button>
         
         {/* PDF 导出 */}
-        <button onClick={exportPDF} className="flex items-center justify-center space-x-3 px-4 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-xl transition-all transform hover:scale-105 shadow-lg">
-          <FileText className="w-5 h-5" />
+        <button onClick={exportPDF} className="flex items-center justify-center space-x-2 px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg transition-all transform hover:scale-105 shadow">
+          <FileText className="w-4 h-4" />
           <div className="text-left">
-            <p className="font-bold text-sm">导出 PDF</p>
-            <p className="text-xs opacity-80">完整报告</p>
+            <p className="font-bold text-xs">导出 PDF</p>
+            <p className="text-[10px] opacity-80">完整报告</p>
           </div>
-          <Download className="w-4 h-4 ml-auto" />
+          <Download className="w-3 h-3 ml-auto" />
         </button>
       </div>
       
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-xs text-blue-800">
+      <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-[10px] text-blue-800">
           <strong>提示：</strong>
           PDF/图片导出将打开打印对话框，请选择"另存为 PDF"或截图保存。报告已内置中文字体支持，确保中文正常显示。
         </p>
