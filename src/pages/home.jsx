@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 // @ts-ignore;
 import { useToast } from '@/components/ui';
 // @ts-ignore;
-import { Download, Upload, Calendar, Users, DollarSign, AlertCircle, CheckCircle, FileSpreadsheet, FileText } from 'lucide-react';
+import { Download, Upload, Calendar, Users, DollarSign, AlertCircle, CheckCircle, FileSpreadsheet, FileText, Image } from 'lucide-react';
 
 import Sidebar from '@/components/Sidebar';
 import KPICards from '@/components/KPICards';
@@ -297,6 +297,11 @@ export default function Home(props) {
               </button>
             </div>
           </div>
+          
+          {/* 导出面板 - 与标题齐平 */}
+          <div className="mt-4">
+            <ExportPanel dailyData={dailyData} kpiData={kpiData} startDate={startDate} endDate={endDate} checkResult={checkResult} />
+          </div>
         </div>
       </header>
       
@@ -327,9 +332,6 @@ export default function Home(props) {
           
           {/* 图表区域 */}
           <Charts dailyData={dailyData} kpiData={kpiData} />
-          
-          {/* 导出面板 */}
-          <ExportPanel dailyData={dailyData} kpiData={kpiData} startDate={startDate} endDate={endDate} />
           
           {/* 明细表格 */}
           <DataTable dailyData={dailyData} />
