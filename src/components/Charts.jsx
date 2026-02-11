@@ -26,7 +26,19 @@ export default function Charts({
 
   // 准备饼图数据
   const pieData = React.useMemo(() => {
-    return [{
+    const data = [];
+
+    // 添加早鸟票（如果有）
+    if (kpiData.earlyBirdRevenue > 0) {
+      data.push({
+        name: '早鸟票',
+        value: kpiData.earlyBirdRevenue,
+        color: '#EC4899'
+      });
+    }
+
+    // 添加其他类型
+    data.push({
       name: '节日',
       value: kpiData.holidayDays * kpiData.holidayDays > 0 ? kpiData.holidayDays * 5000 * 80 : 0,
       color: '#F59E0B'
@@ -38,7 +50,8 @@ export default function Charts({
       name: '平日',
       value: kpiData.normalDays * kpiData.normalDays > 0 ? kpiData.normalDays * 1500 * 80 : 0,
       color: '#1E40AF'
-    }].filter(item => item.value > 0);
+    });
+    return data.filter(item => item.value > 0);
   }, [kpiData]);
   const formatNumber = num => {
     return new Intl.NumberFormat('zh-CN').format(Math.round(num));

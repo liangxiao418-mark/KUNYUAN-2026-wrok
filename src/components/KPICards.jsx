@@ -18,6 +18,7 @@ export default function KPICards({
         </div>
         <p className="text-sm text-blue-100 mb-1">总票房</p>
         <p className="text-3xl font-bold font-mono">¥{formatNumber(kpiData.totalRevenue)}</p>
+        {kpiData.earlyBirdRevenue > 0 && <p className="text-xs text-blue-200 mt-1">含早鸟票 ¥{formatNumber(kpiData.earlyBirdRevenue)}</p>}
       </div>
       
       {/* 总人次 */}
@@ -28,6 +29,7 @@ export default function KPICards({
         </div>
         <p className="text-sm text-emerald-100 mb-1">总人次</p>
         <p className="text-3xl font-bold font-mono">{formatNumber(kpiData.totalVisitors)}</p>
+        {kpiData.earlyBirdVisitors > 0 && <p className="text-xs text-emerald-200 mt-1">含早鸟票 {formatNumber(kpiData.earlyBirdVisitors)}人</p>}
       </div>
       
       {/* 运营天数 */}

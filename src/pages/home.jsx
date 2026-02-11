@@ -23,6 +23,13 @@ export default function Home(props) {
   const [normalVisitors, setNormalVisitors] = useState(1500);
   const [avgTicketPrice, setAvgTicketPrice] = useState(80);
 
+  // 早鸟票设置
+  const [earlyBirdEnabled, setEarlyBirdEnabled] = useState(false);
+  const [earlyBirdPrice, setEarlyBirdPrice] = useState(60);
+  const [earlyBirdStartDate, setEarlyBirdStartDate] = useState('');
+  const [earlyBirdEndDate, setEarlyBirdEndDate] = useState('');
+  const [earlyBirdDailySales, setEarlyBirdDailySales] = useState(500);
+
   // 寒暑假范围
   const [winterVacationStart, setWinterVacationStart] = useState('2026-01-15');
   const [winterVacationEnd, setWinterVacationEnd] = useState('2026-02-25');
@@ -60,6 +67,7 @@ export default function Home(props) {
 
   // 计算结果
   const [dailyData, setDailyData] = useState([]);
+  const [earlyBirdData, setEarlyBirdData] = useState([]);
   const [kpiData, setKpiData] = useState({
     totalRevenue: 0,
     totalVisitors: 0,
@@ -67,7 +75,9 @@ export default function Home(props) {
     holidayDays: 0,
     vacationDays: 0,
     normalDays: 0,
-    closedDays: 0
+    closedDays: 0,
+    earlyBirdRevenue: 0,
+    earlyBirdVisitors: 0
   });
 
   // 解析节日列表
@@ -123,6 +133,38 @@ export default function Home(props) {
     };
   }, [holidayVisitors, vacationVisitors, normalVisitors, winterVacationStart, winterVacationEnd, summerVacationStart, summerVacationEnd]);
 
+  // 计算早鸟票数据
+  const calculateEarlyBirdData = useCallback(() => {
+    if (!earlyBirdEnabled || !earlyBirdStartDate || !earlyBirdEndDate) {
+      setEarlyBirdData([]);
+      return;
+    }
+    const data = [];
+    const start = new Date(earlyBirdStartDate);
+    const end = new Date(earlyBirdEndDate);
+    let earlyBirdRevenue = 0;
+    let earlyBirdVisitors = 0;
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const dayOfWeek = d.getDay();
+
+      // 早鸟票不受周一闭馆限制
+      const revenue = earlyBirdDailySales * earlyBirdPrice;
+      earlyBirdRevenue += revenue;
+      earlyBirdVisitors += earlyBirdDailySales;
+      data.push({
+        date: dateStr,
+        type: 'earlybird',
+        typeLabel: '早鸟票',
+        visitors: earlyBirdDailySales,
+        revenue: revenue,
+        isOpen: true,
+        dayOfWeek
+      });
+    }
+    setEarlyBirdData(data);
+  }, [earlyBirdEnabled, earlyBirdStartDate, earlyBirdEndDate, earlyBirdPrice, earlyBirdDailySales]);
+
   // 计算每日数据
   const calculateDailyData = useCallback(() => {
     const holidaySet = parseHolidays();
@@ -136,6 +178,18 @@ export default function Home(props) {
     let vacationDays = 0;
     let normalDays = 0;
     let closedDays = 0;
+
+    // 计算早鸟票数据
+    let earlyBirdRevenue = 0;
+    let earlyBirdVisitors = 0;
+    if (earlyBirdEnabled && earlyBirdStartDate && earlyBirdEndDate) {
+      const ebStart = new Date(earlyBirdStartDate);
+      const ebEnd = new Date(earlyBirdEndDate);
+      for (let d = new Date(ebStart); d <= ebEnd; d.setDate(d.getDate() + 1)) {
+        earlyBirdRevenue += earlyBirdDailySales * earlyBirdPrice;
+        earlyBirdVisitors += earlyBirdDailySales;
+      }
+    }
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0];
       const {
@@ -166,19 +220,26 @@ export default function Home(props) {
         closedDays++;
       }
     }
+
+    // 总票房 = 展览票房 + 早鸟票票房
     setDailyData(data);
     setKpiData({
-      totalRevenue,
-      totalVisitors,
+      totalRevenue: totalRevenue + earlyBirdRevenue,
+      totalVisitors: totalVisitors + earlyBirdVisitors,
       operatingDays,
       holidayDays,
       vacationDays,
       normalDays,
-      closedDays
+      closedDays,
+      earlyBirdRevenue,
+      earlyBirdVisitors
     });
-  }, [startDate, endDate, holidayVisitors, vacationVisitors, normalVisitors, avgTicketPrice, winterVacationStart, winterVacationEnd, summerVacationStart, summerVacationEnd, parseHolidays, getDateType]);
+  }, [startDate, endDate, holidayVisitors, vacationVisitors, normalVisitors, avgTicketPrice, winterVacationStart, winterVacationEnd, summerVacationStart, summerVacationEnd, parseHolidays, getDateType, earlyBirdEnabled, earlyBirdStartDate, earlyBirdEndDate, earlyBirdPrice, earlyBirdDailySales]);
 
   // 自动计算
+  useEffect(() => {
+    calculateEarlyBirdData();
+  }, [calculateEarlyBirdData]);
   useEffect(() => {
     calculateDailyData();
   }, [calculateDailyData]);
@@ -303,7 +364,7 @@ export default function Home(props) {
       {/* 主内容区 */}
       <div className="flex">
         {/* 侧边栏 */}
-        <Sidebar startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate} holidayVisitors={holidayVisitors} setHolidayVisitors={setHolidayVisitors} vacationVisitors={vacationVisitors} setVacationVisitors={setVacationVisitors} normalVisitors={normalVisitors} setNormalVisitors={setNormalVisitors} avgTicketPrice={avgTicketPrice} setAvgTicketPrice={setAvgTicketPrice} winterVacationStart={winterVacationStart} setWinterVacationStart={setWinterVacationStart} winterVacationEnd={winterVacationEnd} setWinterVacationEnd={setWinterVacationEnd} summerVacationStart={summerVacationStart} setSummerVacationStart={setSummerVacationStart} summerVacationEnd={summerVacationEnd} setSummerVacationEnd={setSummerVacationEnd} holidays={holidays} setHolidays={setHolidays} onResetHolidays={resetHolidays} />
+        <Sidebar startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate} holidayVisitors={holidayVisitors} setHolidayVisitors={setHolidayVisitors} vacationVisitors={vacationVisitors} setVacationVisitors={setVacationVisitors} normalVisitors={normalVisitors} setNormalVisitors={setNormalVisitors} avgTicketPrice={avgTicketPrice} setAvgTicketPrice={setAvgTicketPrice} winterVacationStart={winterVacationStart} setWinterVacationStart={setWinterVacationStart} winterVacationEnd={winterVacationEnd} setWinterVacationEnd={setWinterVacationEnd} summerVacationStart={summerVacationStart} setSummerVacationStart={setSummerVacationStart} summerVacationEnd={summerVacationEnd} setSummerVacationEnd={setSummerVacationEnd} holidays={holidays} setHolidays={setHolidays} onResetHolidays={resetHolidays} earlyBirdEnabled={earlyBirdEnabled} setEarlyBirdEnabled={setEarlyBirdEnabled} earlyBirdPrice={earlyBirdPrice} setEarlyBirdPrice={setEarlyBirdPrice} earlyBirdStartDate={earlyBirdStartDate} setEarlyBirdStartDate={setEarlyBirdStartDate} earlyBirdEndDate={earlyBirdEndDate} setEarlyBirdEndDate={setEarlyBirdEndDate} earlyBirdDailySales={earlyBirdDailySales} setEarlyBirdDailySales={setEarlyBirdDailySales} />
         
         {/* 右侧内容区 */}
         <main className="flex-1 p-6">

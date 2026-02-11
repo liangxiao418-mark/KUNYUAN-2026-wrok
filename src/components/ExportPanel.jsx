@@ -32,7 +32,21 @@ export default function ExportPanel({
       };
 
       // 汇总报告 Sheet
-      workbookData.sheets['汇总报告'] = [['坤远展览票房精准测算报告'], [''], ['展期', `${startDate} 至 ${endDate}`], [''], ['核心指标', '数值'], ['总票房', `¥${formatNumber(kpiData.totalRevenue)}`], ['总人次', formatNumber(kpiData.totalVisitors)], ['运营天数', formatNumber(kpiData.operatingDays)], ['日均票房', `¥${kpiData.operatingDays > 0 ? formatNumber(kpiData.totalRevenue / kpiData.operatingDays) : 0}`], [''], ['分类统计', '天数', '占比'], ['节日天数', formatNumber(kpiData.holidayDays), `${(kpiData.holidayDays / dailyData.length * 100).toFixed(1)}%`], ['寒暑假天数', formatNumber(kpiData.vacationDays), `${(kpiData.vacationDays / dailyData.length * 100).toFixed(1)}%`], ['平日天数', formatNumber(kpiData.normalDays), `${(kpiData.normalDays / dailyData.length * 100).toFixed(1)}%`], ['闭馆天数', formatNumber(kpiData.closedDays), `${(kpiData.closedDays / dailyData.length * 100).toFixed(1)}%`]];
+      const summarySheet = [['坤远展览票房精准测算报告'], [''], ['展期', `${startDate} 至 ${endDate}`], [''], ['核心指标', '数值'], ['总票房', `¥${formatNumber(kpiData.totalRevenue)}`], ['总人次', formatNumber(kpiData.totalVisitors)], ['运营天数', formatNumber(kpiData.operatingDays)], ['日均票房', `¥${kpiData.operatingDays > 0 ? formatNumber(kpiData.totalRevenue / kpiData.operatingDays) : 0}`]];
+
+      // 添加早鸟票信息（如果有）
+      if (kpiData.earlyBirdRevenue > 0) {
+        summarySheet.push([''], ['早鸟票统计', '数值']);
+        summarySheet.push(['早鸟票票房', `¥${formatNumber(kpiData.earlyBirdRevenue)}`]);
+        summarySheet.push(['早鸟票人次', formatNumber(kpiData.earlyBirdVisitors)]);
+        summarySheet.push(['展览票房', `¥${formatNumber(kpiData.totalRevenue - kpiData.earlyBirdRevenue)}`]);
+      }
+      summarySheet.push([''], ['分类统计', '天数', '占比']);
+      summarySheet.push(['节日天数', formatNumber(kpiData.holidayDays), `${(kpiData.holidayDays / dailyData.length * 100).toFixed(1)}%`]);
+      summarySheet.push(['寒暑假天数', formatNumber(kpiData.vacationDays), `${(kpiData.vacationDays / dailyData.length * 100).toFixed(1)}%`]);
+      summarySheet.push(['平日天数', formatNumber(kpiData.normalDays), `${(kpiData.normalDays / dailyData.length * 100).toFixed(1)}%`]);
+      summarySheet.push(['闭馆天数', formatNumber(kpiData.closedDays), `${(kpiData.closedDays / dailyData.length * 100).toFixed(1)}%`]);
+      workbookData.sheets['汇总报告'] = summarySheet;
 
       // 每日明细 Sheet
       workbookData.sheets['每日明细'] = [['日期', '类型', '客流（人次）', '票房（元）', '状态'], ...dailyData.map(item => [item.date, item.typeLabel, formatNumber(item.visitors), formatNumber(item.revenue), item.isOpen ? '开馆' : '闭馆'])];
@@ -48,6 +62,14 @@ export default function ExportPanel({
       csvContent += `总人次,${formatNumber(kpiData.totalVisitors)}\n`;
       csvContent += `运营天数,${formatNumber(kpiData.operatingDays)}\n`;
       csvContent += `日均票房,¥${kpiData.operatingDays > 0 ? formatNumber(kpiData.totalRevenue / kpiData.operatingDays) : 0}\n\n`;
+
+      // 添加早鸟票信息（如果有）
+      if (kpiData.earlyBirdRevenue > 0) {
+        csvContent += '早鸟票统计,数值\n';
+        csvContent += `早鸟票票房,¥${formatNumber(kpiData.earlyBirdRevenue)}\n`;
+        csvContent += `早鸟票人次,${formatNumber(kpiData.earlyBirdVisitors)}\n`;
+        csvContent += `展览票房,¥${formatNumber(kpiData.totalRevenue - kpiData.earlyBirdRevenue)}\n\n`;
+      }
       csvContent += '分类统计,天数,占比\n';
       csvContent += `节日天数,${formatNumber(kpiData.holidayDays)},${(kpiData.holidayDays / dailyData.length * 100).toFixed(1)}%\n`;
       csvContent += `寒暑假天数,${formatNumber(kpiData.vacationDays)},${(kpiData.vacationDays / dailyData.length * 100).toFixed(1)}%\n`;
@@ -209,6 +231,34 @@ export default function ExportPanel({
               </div>
             </div>
           </div>
+          
+          ${kpiData.earlyBirdRevenue > 0 ? `
+          <div class="section">
+            <div class="section-title">早鸟票统计</div>
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>项目</th>
+                  <th>数值</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>早鸟票票房</td>
+                  <td>¥${formatNumber(kpiData.earlyBirdRevenue)}</td>
+                </tr>
+                <tr>
+                  <td>早鸟票人次</td>
+                  <td>${formatNumber(kpiData.earlyBirdVisitors)}</td>
+                </tr>
+                <tr>
+                  <td>展览票房</td>
+                  <td>¥${formatNumber(kpiData.totalRevenue - kpiData.earlyBirdRevenue)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          ` : ''}
           
           <div class="section">
             <div class="section-title">分类统计</div>
