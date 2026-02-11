@@ -328,11 +328,11 @@ export default function Home(props) {
           {/* 图表区域 */}
           <Charts dailyData={dailyData} kpiData={kpiData} />
           
-          {/* 明细表格 */}
-          <DataTable dailyData={dailyData} />
-          
           {/* 导出面板 */}
           <ExportPanel dailyData={dailyData} kpiData={kpiData} startDate={startDate} endDate={endDate} />
+          
+          {/* 明细表格 */}
+          <DataTable dailyData={dailyData} />
         </main>
       </div>
     </div>;
