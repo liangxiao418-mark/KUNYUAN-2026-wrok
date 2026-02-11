@@ -390,7 +390,7 @@ export default function Home(props) {
           <Charts dailyData={dailyData} kpiData={kpiData} />
           
           {/* 导出面板 */}
-          <ExportPanel dailyData={dailyData} kpiData={kpiData} startDate={startDate} endDate={endDate} />
+          <ExportPanel dailyData={dailyData} kpiData={kpiData} startDate={startDate} endDate={endDate} checkResult={checkResult} />
           
           {/* 明细表格 */}
           <DataTable dailyData={dailyData} />
