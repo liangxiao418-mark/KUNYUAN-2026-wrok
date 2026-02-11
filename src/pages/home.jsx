@@ -29,8 +29,8 @@ export default function Home(props) {
   const [summerVacationStart, setSummerVacationStart] = useState('2026-07-01');
   const [summerVacationEnd, setSummerVacationEnd] = useState('2026-08-31');
 
-  // 节日列表（2026年主要节日）
-  const [holidays, setHolidays] = useState(`2026-01-01 元旦
+  // 初始节日列表（2026年主要节日）
+  const INITIAL_HOLIDAYS = `2026-01-01 元旦
 2026-01-28 春节
 2026-01-29 春节
 2026-01-30 春节
@@ -53,7 +53,10 @@ export default function Home(props) {
 2026-10-04 国庆节
 2026-10-05 国庆节
 2026-10-06 国庆节
-2026-10-07 国庆节`);
+2026-10-07 国庆节`;
+
+  // 节日列表（2026年主要节日）
+  const [holidays, setHolidays] = useState(INITIAL_HOLIDAYS);
 
   // 计算结果
   const [dailyData, setDailyData] = useState([]);
@@ -246,6 +249,15 @@ export default function Home(props) {
     reader.readAsText(file);
   };
 
+  // 恢复节日列表到初始状态
+  const resetHolidays = () => {
+    setHolidays(INITIAL_HOLIDAYS);
+    toast({
+      title: '节日列表已恢复',
+      description: '节日列表已恢复到初始状态'
+    });
+  };
+
   // 逻辑自检
   const logicCheck = () => {
     const totalDays = kpiData.holidayDays + kpiData.vacationDays + kpiData.normalDays + kpiData.closedDays;
@@ -291,7 +303,7 @@ export default function Home(props) {
       {/* 主内容区 */}
       <div className="flex">
         {/* 侧边栏 */}
-        <Sidebar startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate} holidayVisitors={holidayVisitors} setHolidayVisitors={setHolidayVisitors} vacationVisitors={vacationVisitors} setVacationVisitors={setVacationVisitors} normalVisitors={normalVisitors} setNormalVisitors={setNormalVisitors} avgTicketPrice={avgTicketPrice} setAvgTicketPrice={setAvgTicketPrice} winterVacationStart={winterVacationStart} setWinterVacationStart={setWinterVacationStart} winterVacationEnd={winterVacationEnd} setWinterVacationEnd={setWinterVacationEnd} summerVacationStart={summerVacationStart} setSummerVacationStart={setSummerVacationStart} summerVacationEnd={summerVacationEnd} setSummerVacationEnd={setSummerVacationEnd} holidays={holidays} setHolidays={setHolidays} />
+        <Sidebar startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate} holidayVisitors={holidayVisitors} setHolidayVisitors={setHolidayVisitors} vacationVisitors={vacationVisitors} setVacationVisitors={setVacationVisitors} normalVisitors={normalVisitors} setNormalVisitors={setNormalVisitors} avgTicketPrice={avgTicketPrice} setAvgTicketPrice={setAvgTicketPrice} winterVacationStart={winterVacationStart} setWinterVacationStart={setWinterVacationStart} winterVacationEnd={winterVacationEnd} setWinterVacationEnd={setWinterVacationEnd} summerVacationStart={summerVacationStart} setSummerVacationStart={setSummerVacationStart} summerVacationEnd={summerVacationEnd} setSummerVacationEnd={setSummerVacationEnd} holidays={holidays} setHolidays={setHolidays} onResetHolidays={resetHolidays} />
         
         {/* 右侧内容区 */}
         <main className="flex-1 p-6">

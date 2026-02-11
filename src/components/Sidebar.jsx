@@ -1,7 +1,7 @@
 // @ts-ignore;
 import React from 'react';
 // @ts-ignore;
-import { Calendar, Users, DollarSign, School, Star, Settings } from 'lucide-react';
+import { Calendar, Users, DollarSign, School, Star, Settings, RotateCcw } from 'lucide-react';
 
 export default function Sidebar({
   startDate,
@@ -25,7 +25,8 @@ export default function Sidebar({
   summerVacationEnd,
   setSummerVacationEnd,
   holidays,
-  setHolidays
+  setHolidays,
+  onResetHolidays
 }) {
   return <aside className="w-80 bg-white shadow-xl min-h-screen p-6 border-r border-slate-200">
       <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
@@ -117,9 +118,15 @@ export default function Sidebar({
       
       {/* 节日管理 */}
       <div className="mb-6">
-        <h3 className="text-sm font-semibold text-slate-600 mb-3 flex items-center">
-          <Star className="w-4 h-4 mr-2" />
-          节日管理
+        <h3 className="text-sm font-semibold text-slate-600 mb-3 flex items-center justify-between">
+          <div className="flex items-center">
+            <Star className="w-4 h-4 mr-2" />
+            节日管理
+          </div>
+          <button onClick={onResetHolidays} className="flex items-center space-x-1 px-2 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 rounded transition-colors" title="恢复到初始状态">
+            <RotateCcw className="w-3 h-3" />
+            <span>恢复</span>
+          </button>
         </h3>
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">
