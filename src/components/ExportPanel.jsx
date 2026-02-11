@@ -589,6 +589,416 @@ export default function ExportPanel({
     `;
   };
 
+  // 绘制完整的报告图片
+  const drawFullReport = canvas => {
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // 清空画布并绘制背景
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, width, height);
+
+    // 布局参数
+    const sidebarWidth = 320;
+    const sidebarX = 0;
+    const mainX = sidebarWidth;
+    const mainWidth = width - sidebarWidth;
+    const padding = 24;
+    let currentY = padding;
+
+    // 绘制左侧参数栏背景
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(sidebarX, 0, sidebarWidth, height);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(sidebarWidth, 0);
+    ctx.lineTo(sidebarWidth, height);
+    ctx.stroke();
+
+    // 绘制标题
+    ctx.fillStyle = '#1E40AF';
+    ctx.font = 'bold 24px Microsoft YaHei';
+    ctx.textAlign = 'center';
+    ctx.fillText('坤远展览票房精准测算报告', sidebarX + sidebarWidth / 2, currentY + 24);
+    ctx.fillStyle = '#666666';
+    ctx.font = '12px Microsoft YaHei';
+    ctx.fillText(`2026年版 | 展期：${startDate} 至 ${endDate}`, sidebarX + sidebarWidth / 2, currentY + 48);
+    currentY += 80;
+
+    // 绘制分隔线
+    ctx.strokeStyle = '#1E40AF';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(sidebarX + padding, currentY);
+    ctx.lineTo(sidebarX + sidebarWidth - padding, currentY);
+    ctx.stroke();
+    currentY += 30;
+
+    // 绘制参数配置
+    const drawSidebarSection = (title, icon, items) => {
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 14px Microsoft YaHei';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${icon} ${title}`, sidebarX + padding, currentY);
+      currentY += 24;
+      items.forEach(item => {
+        ctx.fillStyle = '#64748B';
+        ctx.font = '11px Microsoft YaHei';
+        ctx.fillText(item.label, sidebarX + padding, currentY);
+        currentY += 18;
+
+        // 绘制输入框
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        ctx.fillRect(sidebarX + padding, currentY, sidebarWidth - padding * 2, 32);
+        ctx.strokeRect(sidebarX + padding, currentY, sidebarWidth - padding * 2, 32);
+        ctx.fillStyle = '#333333';
+        ctx.font = '12px Microsoft YaHei';
+        ctx.fillText(item.value, sidebarX + padding + 10, currentY + 20);
+        currentY += 44;
+      });
+      currentY += 10;
+    };
+
+    // 展期设置
+    drawSidebarSection('展期设置', '📅', [{
+      label: '开始日期',
+      value: startDate
+    }, {
+      label: '结束日期',
+      value: endDate
+    }]);
+
+    // 客流模型
+    drawSidebarSection('客流模型（人次/天）', '👥', [{
+      label: '★ 节日客流',
+      value: formatNumber(holidayVisitors)
+    }, {
+      label: '📚 寒暑假客流',
+      value: formatNumber(vacationVisitors)
+    }, {
+      label: '📅 平日客流',
+      value: formatNumber(normalVisitors)
+    }]);
+
+    // 票价设置
+    drawSidebarSection('票价设置', '💰', [{
+      label: '平均票价（元）',
+      value: `¥${avgTicketPrice}`
+    }]);
+
+    // 早鸟票设置
+    if (earlyBirdEnabled) {
+      drawSidebarSection('早鸟票设置', '⭐', [{
+        label: '早鸟票单价（元）',
+        value: `¥${earlyBirdPrice}`
+      }, {
+        label: '销售开始日期',
+        value: earlyBirdStartDate
+      }, {
+        label: '销售结束日期',
+        value: earlyBirdEndDate
+      }, {
+        label: '日均销售量（张/天）',
+        value: formatNumber(earlyBirdDailySales)
+      }]);
+    }
+
+    // 寒暑假范围
+    drawSidebarSection('寒暑假范围', '🎓', [{
+      label: '寒假',
+      value: `${winterVacationStart} 至 ${winterVacationEnd}`
+    }, {
+      label: '暑假',
+      value: `${summerVacationStart} 至 ${summerVacationEnd}`
+    }]);
+
+    // 右侧内容区
+    currentY = padding;
+
+    // 绘制KPI卡片
+    const kpiCardWidth = (mainWidth - padding * 5) / 4;
+    const kpiCardHeight = 100;
+    const kpiDataList = [{
+      label: '总票房',
+      value: `¥${formatNumber(kpiData.totalRevenue)}`,
+      color: ['#1E40AF', '#3B82F6'],
+      subtext: kpiData.earlyBirdRevenue > 0 ? `含早鸟票 ¥${formatNumber(kpiData.earlyBirdRevenue)}` : ''
+    }, {
+      label: '总人次',
+      value: formatNumber(kpiData.totalVisitors),
+      color: ['#059669', '#10B981'],
+      subtext: kpiData.earlyBirdVisitors > 0 ? `含早鸟票 ${formatNumber(kpiData.earlyBirdVisitors)}人` : ''
+    }, {
+      label: '运营天数',
+      value: formatNumber(kpiData.operatingDays),
+      color: ['#F59E0B', '#FBBF24'],
+      subtext: ''
+    }, {
+      label: '日均票房',
+      value: `¥${kpiData.operatingDays > 0 ? formatNumber(kpiData.totalRevenue / kpiData.operatingDays) : 0}`,
+      color: ['#7C3AED', '#A78BFA'],
+      subtext: ''
+    }];
+    kpiDataList.forEach((kpi, index) => {
+      const cardX = mainX + padding + index * (kpiCardWidth + padding);
+
+      // 绘制渐变背景
+      const gradient = ctx.createLinearGradient(cardX, currentY, cardX + kpiCardWidth, currentY + kpiCardHeight);
+      gradient.addColorStop(0, kpi.color[0]);
+      gradient.addColorStop(1, kpi.color[1]);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(cardX, currentY, kpiCardWidth, kpiCardHeight);
+
+      // 绘制阴影
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(cardX + 4, currentY + 4, kpiCardWidth, kpiCardHeight);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(cardX, currentY, kpiCardWidth, kpiCardHeight);
+
+      // 绘制文字
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = '12px Microsoft YaHei';
+      ctx.textAlign = 'center';
+      ctx.fillText(kpi.label, cardX + kpiCardWidth / 2, currentY + 30);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Microsoft YaHei';
+      ctx.fillText(kpi.value, cardX + kpiCardWidth / 2, currentY + 60);
+      if (kpi.subtext) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = '10px Microsoft YaHei';
+        ctx.fillText(kpi.subtext, cardX + kpiCardWidth / 2, currentY + 85);
+      }
+    });
+    currentY += kpiCardHeight + padding;
+
+    // 绘制逻辑自检
+    const checkBoxHeight = 60;
+    ctx.fillStyle = checkResult.isMatch ? '#ECFDF5' : '#FEF2F2';
+    ctx.strokeStyle = checkResult.isMatch ? '#10B981' : '#EF4444';
+    ctx.lineWidth = 2;
+    ctx.fillRect(mainX + padding, currentY, mainWidth - padding * 2, checkBoxHeight);
+    ctx.strokeRect(mainX + padding, currentY, mainWidth - padding * 2, checkBoxHeight);
+    ctx.fillStyle = checkResult.isMatch ? '#065F46' : '#991B1B';
+    ctx.font = 'bold 14px Microsoft YaHei';
+    ctx.textAlign = 'left';
+    ctx.fillText(checkResult.isMatch ? '✓ 计算正确' : '✗ 计算异常', mainX + padding + 16, currentY + 24);
+    ctx.fillStyle = checkResult.isMatch ? '#047857' : '#B91C1C';
+    ctx.font = '12px Microsoft YaHei';
+    const checkText = checkResult.isMatch ? `总天数 ${checkResult.calculatedTotal} = 节日(${checkResult.breakdown.holiday}) + 寒暑假(${checkResult.breakdown.vacation}) + 平日(${checkResult.breakdown.normal}) + 闭馆(${checkResult.breakdown.closed})` : `总天数 ${checkResult.calculatedTotal} ≠ 分类天数之和 ${checkResult.totalDays}`;
+    ctx.fillText(checkText, mainX + padding + 16, currentY + 44);
+    currentY += checkBoxHeight + padding;
+
+    // 绘制图表
+    const chartWidth = (mainWidth - padding * 3) / 2;
+    const chartHeight = 300;
+
+    // 折线图
+    const drawLineChart = (x, y, w, h) => {
+      // 背景
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, w, h);
+
+      // 标题
+      ctx.fillStyle = '#1E293B';
+      ctx.font = 'bold 16px Microsoft YaHei';
+      ctx.textAlign = 'left';
+      ctx.fillText('每月票房趋势', x + 16, y + 32);
+
+      // 计算每月数据
+      const monthlyData = [];
+      for (let i = 0; i < 12; i++) {
+        const monthData = dailyData.filter(d => {
+          const month = new Date(d.date).getMonth();
+          return month === i;
+        });
+        const monthRevenue = monthData.reduce((sum, d) => sum + d.revenue, 0);
+        monthlyData.push({
+          month: i + 1,
+          revenue: monthRevenue
+        });
+      }
+      const maxRevenue = Math.max(...monthlyData.map(d => d.revenue)) || 1;
+      const chartPadding = 50;
+      const chartAreaWidth = w - chartPadding * 2;
+      const chartAreaHeight = h - chartPadding * 2;
+
+      // 绘制坐标轴
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + chartPadding, y + chartPadding);
+      ctx.lineTo(x + chartPadding, y + h - chartPadding);
+      ctx.lineTo(x + w - chartPadding, y + h - chartPadding);
+      ctx.stroke();
+
+      // 绘制折线
+      ctx.strokeStyle = '#3B82F6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      monthlyData.forEach((d, i) => {
+        const px = x + chartPadding + i / 11 * chartAreaWidth;
+        const py = y + h - chartPadding - d.revenue / maxRevenue * chartAreaHeight;
+        if (i === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
+      });
+      ctx.stroke();
+
+      // 绘制数据点
+      ctx.fillStyle = '#3B82F6';
+      monthlyData.forEach((d, i) => {
+        const px = x + chartPadding + i / 11 * chartAreaWidth;
+        const py = y + h - chartPadding - d.revenue / maxRevenue * chartAreaHeight;
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 绘制月份标签
+        ctx.fillStyle = '#64748B';
+        ctx.font = '10px Microsoft YaHei';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${d.month}月`, px, y + h - chartPadding + 16);
+      });
+    };
+
+    // 饼图
+    const drawPieChart = (x, y, w, h) => {
+      // 背景
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, w, h);
+
+      // 标题
+      ctx.fillStyle = '#1E293B';
+      ctx.font = 'bold 16px Microsoft YaHei';
+      ctx.textAlign = 'left';
+      ctx.fillText('各时段票房贡献占比', x + 16, y + 32);
+      const pieX = x + w / 2;
+      const pieY = y + h / 2 + 10;
+      const pieRadius = 80;
+      const pieData = [{
+        label: '节日',
+        value: kpiData.holidayDays,
+        color: '#EF4444'
+      }, {
+        label: '寒暑假',
+        value: kpiData.vacationDays,
+        color: '#F59E0B'
+      }, {
+        label: '平日',
+        value: kpiData.normalDays,
+        color: '#10B981'
+      }];
+      const total = pieData.reduce((sum, d) => sum + d.value, 0);
+      let startAngle = -Math.PI / 2;
+      pieData.forEach(d => {
+        const sliceAngle = d.value / total * Math.PI * 2;
+        ctx.fillStyle = d.color;
+        ctx.beginPath();
+        ctx.moveTo(pieX, pieY);
+        ctx.arc(pieX, pieY, pieRadius, startAngle, startAngle + sliceAngle);
+        ctx.closePath();
+        ctx.fill();
+        startAngle += sliceAngle;
+      });
+
+      // 绘制图例
+      ctx.font = '12px Microsoft YaHei';
+      pieData.forEach((d, i) => {
+        const legendY = pieY + pieRadius + 30 + i * 20;
+        ctx.fillStyle = d.color;
+        ctx.fillRect(pieX - 60, legendY - 10, 12, 12);
+        ctx.fillStyle = '#374151';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${d.label} (${(d.value / total * 100).toFixed(0)}%)`, pieX - 40, legendY);
+      });
+    };
+    drawLineChart(mainX + padding, currentY, chartWidth, chartHeight);
+    drawPieChart(mainX + padding * 2 + chartWidth, currentY, chartWidth, chartHeight);
+    currentY += chartHeight + padding;
+
+    // 绘制分类统计表格
+    const tableHeight = 200;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(mainX + padding, currentY, mainWidth - padding * 2, tableHeight);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(mainX + padding, currentY, mainWidth - padding * 2, tableHeight);
+
+    // 标题
+    ctx.fillStyle = '#1E293B';
+    ctx.font = 'bold 16px Microsoft YaHei';
+    ctx.textAlign = 'left';
+    ctx.fillText('分类统计', mainX + padding + 16, currentY + 32);
+
+    // 表头
+    const tableY = currentY + 50;
+    const rowHeight = 30;
+    const colWidths = [100, 100, 100];
+    const tableX = mainX + padding + 16;
+    ctx.fillStyle = '#1E40AF';
+    ctx.fillRect(tableX, tableY, mainWidth - padding * 2 - 32, rowHeight);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px Microsoft YaHei';
+    ctx.fillText('类型', tableX + 20, tableY + 20);
+    ctx.fillText('天数', tableX + colWidths[0] + 20, tableY + 20);
+    ctx.fillText('占比', tableX + colWidths[0] + colWidths[1] + 20, tableY + 20);
+
+    // 表格数据
+    const tableData = [{
+      type: '节日',
+      days: kpiData.holidayDays
+    }, {
+      type: '寒暑假',
+      days: kpiData.vacationDays
+    }, {
+      type: '平日',
+      days: kpiData.normalDays
+    }, {
+      type: '闭馆',
+      days: kpiData.closedDays
+    }];
+    tableData.forEach((row, index) => {
+      const rowY = tableY + rowHeight * (index + 1);
+
+      // 交替背景色
+      if (index % 2 === 0) {
+        ctx.fillStyle = '#f9f9f9';
+        ctx.fillRect(tableX, rowY, mainWidth - padding * 2 - 32, rowHeight);
+      }
+
+      // 边框
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.strokeRect(tableX, rowY, mainWidth - padding * 2 - 32, rowHeight);
+
+      // 数据
+      ctx.fillStyle = '#333333';
+      ctx.font = '12px Microsoft YaHei';
+      ctx.fillText(row.type, tableX + 20, rowY + 20);
+      ctx.fillText(formatNumber(row.days), tableX + colWidths[0] + 20, rowY + 20);
+      ctx.fillText(`${(row.days / dailyData.length * 100).toFixed(1)}%`, tableX + colWidths[0] + colWidths[1] + 20, rowY + 20);
+    });
+    currentY += tableHeight + padding;
+
+    // 绘制页脚
+    ctx.fillStyle = '#64748B';
+    ctx.font = '12px Microsoft YaHei';
+    ctx.textAlign = 'center';
+    ctx.fillText(`报告生成时间：${new Date().toLocaleString('zh-CN')}`, mainX + mainWidth / 2, currentY + 20);
+    ctx.fillText('坤远展览票房精准测算沙盘 (2026年版)', mainX + mainWidth / 2, currentY + 40);
+  };
+
   // 生成完整报告图片
   const generateReportImage = () => {
     return new Promise((resolve, reject) => {
