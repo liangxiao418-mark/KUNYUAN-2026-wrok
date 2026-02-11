@@ -503,23 +503,26 @@ export default function ExportPanel({
       // 生成HTML内容
       const htmlContent = generateReportHTML(chartImageBase64);
 
-      // 创建Blob
-      const blob = new Blob([htmlContent], {
-        type: 'text/html'
-      });
-      const url = URL.createObjectURL(blob);
+      // 创建打印窗口
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (!printWindow) {
+        toast({
+          title: '导出失败',
+          description: '请允许弹出窗口以导出PDF',
+          variant: 'destructive'
+        });
+        return;
+      }
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
 
-      // 创建下载链接
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `坤远展览票房精准测算报告_${startDate}_${endDate}.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      // 等待页面加载完成后触发打印
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
       toast({
-        title: 'PDF 导出成功',
-        description: '报告已下载为HTML文件，请在浏览器中打开并选择"另存为 PDF"'
+        title: 'PDF 导出准备就绪',
+        description: '请在打印对话框中选择"另存为 PDF"以保存报告'
       });
     } catch (error) {
       toast({
@@ -536,26 +539,35 @@ export default function ExportPanel({
       // 生成图表图片
       const chartImageBase64 = await generateChartImage();
 
-      // 生成HTML内容
-      const htmlContent = generateReportHTML(chartImageBase64);
-
-      // 创建Blob
-      const blob = new Blob([htmlContent], {
-        type: 'text/html'
+      // 将Base64转换为Blob
+      const base64Data = chartImageBase64.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+      const blob = new Blob(byteArrays, {
+        type: 'image/png'
       });
       const url = URL.createObjectURL(blob);
 
       // 创建下载链接
       const link = document.createElement('a');
       link.href = url;
-      link.download = `坤远展览票房精准测算报告_${startDate}_${endDate}.html`;
+      link.download = `坤远展览票房精准测算报告_${startDate}_${endDate}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       toast({
         title: '图片导出成功',
-        description: '报告已下载为HTML文件，请在浏览器中打开并截图保存为图片'
+        description: '报告图表已成功导出为PNG图片'
       });
     } catch (error) {
       toast({
@@ -602,7 +614,7 @@ export default function ExportPanel({
       <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
         <p className="text-sm text-amber-800">
           <strong>提示：</strong>
-          PDF和图片导出将下载HTML文件，包含核心指标、逻辑自检、图表分析、分类统计等内容（不含每日明细表）。请在浏览器中打开下载的文件，然后使用"另存为 PDF"或截图工具保存为图片。
+          PDF导出将打开打印对话框，请选择"另存为 PDF"以保存报告；图片导出将直接下载PNG格式的图表文件。两者都包含核心指标、逻辑自检、图表分析、分类统计等内容（不含每日明细表）。
         </p>
       </div>
     </div>;
