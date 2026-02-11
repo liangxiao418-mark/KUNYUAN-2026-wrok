@@ -5,6 +5,121 @@ import { FileSpreadsheet, FileText, Download, Image } from 'lucide-react';
 // @ts-ignore;
 import { useToast } from '@/components/ui';
 
+// 简单的图表绘制函数
+const drawCharts = (canvas, dailyData, kpiData) => {
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  // 清空画布
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+
+  // 绘制折线图（每月票房趋势）
+  const chartX = 50;
+  const chartY = 50;
+  const chartWidth = 300;
+  const chartHeight = 200;
+
+  // 计算每月数据
+  const monthlyData = [];
+  for (let i = 0; i < 12; i++) {
+    const monthData = dailyData.filter(d => {
+      const month = new Date(d.date).getMonth();
+      return month === i;
+    });
+    const monthRevenue = monthData.reduce((sum, d) => sum + d.revenue, 0);
+    monthlyData.push({
+      month: i + 1,
+      revenue: monthRevenue
+    });
+  }
+  const maxRevenue = Math.max(...monthlyData.map(d => d.revenue)) || 1;
+
+  // 绘制坐标轴
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(chartX, chartY);
+  ctx.lineTo(chartX, chartY + chartHeight);
+  ctx.lineTo(chartX + chartWidth, chartY + chartHeight);
+  ctx.stroke();
+
+  // 绘制折线
+  ctx.strokeStyle = '#3B82F6';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  monthlyData.forEach((d, i) => {
+    const x = chartX + i / 11 * chartWidth;
+    const y = chartY + chartHeight - d.revenue / maxRevenue * chartHeight;
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
+
+  // 绘制数据点
+  ctx.fillStyle = '#3B82F6';
+  monthlyData.forEach((d, i) => {
+    const x = chartX + i / 11 * chartWidth;
+    const y = chartY + chartHeight - d.revenue / maxRevenue * chartHeight;
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 绘制标题
+  ctx.fillStyle = '#1E40AF';
+  ctx.font = 'bold 14px Microsoft YaHei';
+  ctx.fillText('每月票房趋势', chartX, chartY - 10);
+
+  // 绘制饼图（各时段票房贡献占比）
+  const pieX = 400;
+  const pieY = 150;
+  const pieRadius = 80;
+  const pieData = [{
+    label: '节日',
+    value: kpiData.holidayDays,
+    color: '#EF4444'
+  }, {
+    label: '寒暑假',
+    value: kpiData.vacationDays,
+    color: '#F59E0B'
+  }, {
+    label: '平日',
+    value: kpiData.normalDays,
+    color: '#10B981'
+  }];
+  const total = pieData.reduce((sum, d) => sum + d.value, 0);
+  let startAngle = -Math.PI / 2;
+  pieData.forEach(d => {
+    const sliceAngle = d.value / total * Math.PI * 2;
+    ctx.fillStyle = d.color;
+    ctx.beginPath();
+    ctx.moveTo(pieX, pieY);
+    ctx.arc(pieX, pieY, pieRadius, startAngle, startAngle + sliceAngle);
+    ctx.closePath();
+    ctx.fill();
+    startAngle += sliceAngle;
+  });
+
+  // 绘制图例
+  ctx.font = '12px Microsoft YaHei';
+  pieData.forEach((d, i) => {
+    const legendY = pieY + pieRadius + 20 + i * 20;
+    ctx.fillStyle = d.color;
+    ctx.fillRect(pieX - 60, legendY - 10, 12, 12);
+    ctx.fillStyle = '#374151';
+    ctx.fillText(`${d.label} (${(d.value / total * 100).toFixed(0)}%)`, pieX - 40, legendY);
+  });
+
+  // 绘制标题
+  ctx.fillStyle = '#1E40AF';
+  ctx.font = 'bold 14px Microsoft YaHei';
+  ctx.fillText('各时段票房贡献占比', pieX - 60, pieY - pieRadius - 10);
+};
 export default function ExportPanel({
   dailyData,
   kpiData,
@@ -109,7 +224,7 @@ export default function ExportPanel({
   };
 
   // 生成报告HTML内容（用于PDF和图片导出）
-  const generateReportHTML = () => {
+  const generateReportHTML = chartImageBase64 => {
     return `
       <!DOCTYPE html>
       <html>
@@ -214,6 +329,21 @@ export default function ExportPanel({
           }
           .check-box.success .check-desc { color: #047857; }
           .check-box.error .check-desc { color: #B91C1C; }
+          .charts-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          }
+          .chart-wrapper {
+            flex: 1;
+            text-align: center;
+          }
+          .chart-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+          }
           .footer { 
             margin-top: 40px;
             padding-top: 20px;
@@ -225,6 +355,7 @@ export default function ExportPanel({
           @media print {
             body { padding: 20px; }
             .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-container { flex-direction: column; }
           }
         </style>
       </head>
@@ -262,6 +393,15 @@ export default function ExportPanel({
             <div class="check-title">${checkResult.isMatch ? '✓ 计算正确' : '✗ 计算异常'}</div>
             <div class="check-desc">
               ${checkResult.isMatch ? `总天数 ${checkResult.calculatedTotal} = 节日(${checkResult.breakdown.holiday}) + 寒暑假(${checkResult.breakdown.vacation}) + 平日(${checkResult.breakdown.normal}) + 闭馆(${checkResult.breakdown.closed})` : `总天数 ${checkResult.calculatedTotal} ≠ 分类天数之和 ${checkResult.totalDays}`}
+            </div>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">图表分析</div>
+          <div class="charts-container">
+            <div class="chart-wrapper">
+              <img src="${chartImageBase64}" alt="每月票房趋势" class="chart-image" />
             </div>
           </div>
         </div>
@@ -338,23 +478,48 @@ export default function ExportPanel({
     `;
   };
 
+  // 生成图表图片
+  const generateChartImage = () => {
+    return new Promise((resolve, reject) => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 600;
+        canvas.height = 300;
+        drawCharts(canvas, dailyData, kpiData);
+        const dataUrl = canvas.toDataURL('image/png');
+        resolve(dataUrl);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
   // 导出 PDF
-  const exportPDF = () => {
+  const exportPDF = async () => {
     try {
-      const htmlContent = generateReportHTML();
+      // 生成图表图片
+      const chartImageBase64 = await generateChartImage();
 
-      // 创建打印窗口
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
+      // 生成HTML内容
+      const htmlContent = generateReportHTML(chartImageBase64);
 
-      // 等待页面加载完成后触发打印
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
+      // 创建Blob
+      const blob = new Blob([htmlContent], {
+        type: 'text/html'
+      });
+      const url = URL.createObjectURL(blob);
+
+      // 创建下载链接
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `坤远展览票房精准测算报告_${startDate}_${endDate}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       toast({
-        title: 'PDF 导出准备就绪',
-        description: '请在打印对话框中选择"另存为 PDF"以保存报告'
+        title: 'PDF 导出成功',
+        description: '报告已下载为HTML文件，请在浏览器中打开并选择"另存为 PDF"'
       });
     } catch (error) {
       toast({
@@ -366,17 +531,31 @@ export default function ExportPanel({
   };
 
   // 导出图片
-  const exportImage = () => {
+  const exportImage = async () => {
     try {
-      const htmlContent = generateReportHTML();
+      // 生成图表图片
+      const chartImageBase64 = await generateChartImage();
 
-      // 创建新窗口
-      const imageWindow = window.open('', '_blank');
-      imageWindow.document.write(htmlContent);
-      imageWindow.document.close();
+      // 生成HTML内容
+      const htmlContent = generateReportHTML(chartImageBase64);
+
+      // 创建Blob
+      const blob = new Blob([htmlContent], {
+        type: 'text/html'
+      });
+      const url = URL.createObjectURL(blob);
+
+      // 创建下载链接
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `坤远展览票房精准测算报告_${startDate}_${endDate}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       toast({
-        title: '图片导出准备就绪',
-        description: '请使用截图工具或浏览器打印功能保存为图片（建议选择"另存为 PDF"后转换为图片）'
+        title: '图片导出成功',
+        description: '报告已下载为HTML文件，请在浏览器中打开并截图保存为图片'
       });
     } catch (error) {
       toast({
@@ -423,7 +602,7 @@ export default function ExportPanel({
       <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
         <p className="text-sm text-amber-800">
           <strong>提示：</strong>
-          PDF和图片导出将打开新窗口，包含核心指标、逻辑自检、分类统计等内容（不含每日明细表）。请使用浏览器打印功能保存为PDF或截图保存为图片。
+          PDF和图片导出将下载HTML文件，包含核心指标、逻辑自检、图表分析、分类统计等内容（不含每日明细表）。请在浏览器中打开下载的文件，然后使用"另存为 PDF"或截图工具保存为图片。
         </p>
       </div>
     </div>;
